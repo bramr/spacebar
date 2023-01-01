@@ -17,25 +17,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private let spaceHelper = SpaceHelper()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        
+        self.setupNotifications()
+        self.setupStatusItem()
+        self.spaceChanged()
+    }
+    
+    func setupNotifications() {
         NSWorkspace.shared.notificationCenter.addObserver(
             self,
             selector: #selector(self.spaceChanged),
             name: NSWorkspace.activeSpaceDidChangeNotification,
             object: nil)
-       
-        /*
-         Called often, only needed when using different spaces per monitor
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(AppDelegate.updateActiveSpaceNumber),
-            name: NSApplication.didUpdateNotification,
-            object: nil
-        )
-        */
         
-        self.setupStatusItem()
-        self.spaceChanged()
+        if (NSScreen.screensHaveSeparateSpaces) {
+            //Called often, only needed when using different spaces per monitor
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.spaceChanged),
+                name: NSApplication.didUpdateNotification,
+                object: nil
+            )
+        }
     }
     
     func setupStatusItem() {
@@ -61,8 +63,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func updateIcon(space: Int) {
-        let sfSymbol = space > 0 ? String("\(space).square.fill") : "exclamationmark.square.fill"
-        let description = space > 0 ? String("\(space)") : "Unknown"
+        // If no space number assume we're in fullscreen mode.
+        let sfSymbol = space > 0 ? String("\(space).square.fill") : "f.square.fill"
+        let description = space > 0 ? String("\(space)") : "Fullscreen"
         DispatchQueue.main.async {
             self.statusItem.button?.image = NSImage(systemSymbolName: sfSymbol, accessibilityDescription: description)
         }
